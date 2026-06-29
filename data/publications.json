@@ -1,0 +1,44 @@
+[
+  {
+    "title": "Automated Abdominal Aortic Aneurysm Detection on Routine CT Angiography",
+    "authors": ["M. Chen", "A. Rivera", "S. Patel"],
+    "year": 2024,
+    "journal": "Journal of Synthetic Vascular Imaging",
+    "abstract": "This mock study evaluates a deep learning pipeline for automated abdominal aortic aneurysm detection using synthetic CT angiography metadata. The model identifies infrarenal aortic dilation and produces measurement candidates for radiologist review."
+  },
+  {
+    "title": "Opportunistic AAA Screening in Abdominal CT Cohorts",
+    "authors": ["L. Morgan", "T. Okafor", "N. Singh"],
+    "year": 2023,
+    "journal": "NIH Demo Clinical Imaging Reports",
+    "abstract": "We describe a simulated workflow for opportunistic abdominal aortic aneurysm screening in older adults undergoing abdominal CT. The study emphasizes cohort discovery, measurement standardization, and structured reporting."
+  },
+  {
+    "title": "Synthetic DICOM Metadata for Multisite Imaging AI Validation",
+    "authors": ["K. Alvarez", "R. Brooks"],
+    "year": 2025,
+    "journal": "Biomedical Informatics Sandbox",
+    "abstract": "This paper presents a fake multisite DICOM metadata resource for testing medical imaging AI pipelines without protected health information. Scanner manufacturer, slice thickness, contrast phase, and acquisition dates are modeled for reproducible demos."
+  },
+  {
+    "title": "Atherosclerotic Plaque Burden and Aortic Diameter on Contrast CT",
+    "authors": ["P. Shah", "E. Williams", "D. Kim"],
+    "year": 2022,
+    "journal": "Vascular Research Examples",
+    "abstract": "In a synthetic abdominal CT cohort, atherosclerotic plaque descriptors are linked with aortic diameter categories. The mock analysis demonstrates how imaging-derived biomarkers can be represented for downstream research tools."
+  },
+  {
+    "title": "Reusable Research Tools for LLM-Assisted Clinical Cohort Exploration",
+    "authors": ["G. Huang", "I. Thompson"],
+    "year": 2025,
+    "journal": "Applied AI Research Infrastructure",
+    "abstract": "This demo article describes how typed tools can help language model assistants search publications, inspect clinical metadata, and compute descriptive statistics while keeping data access patterns consistent across applications."
+  },
+  {
+    "title": "Quality Control for Abdominal Aorta Measurements in CT Research",
+    "authors": ["A. Nelson", "M. Gupta"],
+    "year": 2021,
+    "journal": "Imaging Protocol Review",
+    "abstract": "A mock quality control framework is proposed for abdominal aorta measurement in CT research. The protocol covers outer-wall measurement, orthogonal reconstruction, diameter thresholds, and adjudication of borderline cases."
+  }
+]
