@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import statistics
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -221,9 +223,57 @@ def search_protocols(query: str) -> list[dict[str, str]]:
 
 
 def main() -> None:
+    if len(sys.argv) > 1:
+        run_local_demo(" ".join(sys.argv[1:]))
+        return
+
+    if sys.stdin.isatty():
+        print(
+            "NIH Research MCP Server\n\n"
+            "This is an MCP stdio server, so natural-language prompts should be\n"
+            "sent from an MCP client such as Claude Desktop, Cursor, or Codex.\n\n"
+            "For a quick local terminal demo, run one of these commands:\n\n"
+            '  python server.py "Find patients over 65 with AAA diameter greater than 3 cm."\n'
+            '  python server.py "Compute AAA prevalence in the synthetic cohort."\n'
+            '  python server.py "Search the protocols for DICOM de-identification rules."\n\n'
+            "When launched by an MCP client, this same file will run as the server."
+        )
+        return
+
     # FastMCP handles the MCP transport lifecycle; the functions above define
     # the reusable research capability layer exposed to compatible clients.
     mcp.run()
+
+
+def run_local_demo(prompt: str) -> None:
+    """Tiny terminal demo router for humans trying the project without an MCP client."""
+    normalized = prompt.lower()
+
+    if "prevalence" in normalized or "statistics" in normalized:
+        result = compute_aaa_statistics()
+    elif "protocol" in normalized or "de-identification" in normalized or "dicom" in normalized:
+        result = search_protocols(prompt)
+    elif "publication" in normalized or "paper" in normalized or "automated" in normalized:
+        result = search_publications(prompt)
+    elif "patient" in normalized or "aaa" in normalized:
+        min_age = None
+        age_match = re.search(r"(?:over|older than|age greater than)\s+(\d+)", normalized)
+        if age_match:
+            min_age = int(age_match.group(1)) + 1
+
+        diameter = 3.0
+        diameter_match = re.search(r"(?:greater than|over|at least)\s+(\d+(?:\.\d+)?)\s*cm", normalized)
+        if diameter_match:
+            diameter = float(diameter_match.group(1))
+
+        result = find_aaa_patients(min_diameter_cm=diameter, min_age=min_age)
+    else:
+        result = {
+            "message": "Try asking about patients, AAA prevalence, publications, or protocols.",
+            "example": "Find patients over 65 with AAA diameter greater than 3 cm.",
+        }
+
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

@@ -48,6 +48,19 @@ pip install -e .
 python server.py
 ```
 
+When you run `python server.py` directly in a terminal, it prints local demo
+instructions. When an MCP client launches the same file with stdio pipes, it
+runs as the MCP server.
+
+You can try the data tools from PowerShell without configuring an MCP client:
+
+```powershell
+python server.py "Find patients over 65 with AAA diameter greater than 3 cm."
+python server.py "Search the protocols for DICOM de-identification rules."
+python server.py "Compute AAA prevalence in the synthetic cohort."
+python server.py "Find publications about automated AAA detection."
+```
+
 The project uses the official Python MCP SDK package, declared in `pyproject.toml` as `mcp`. The server follows the common `FastMCP` pattern:
 
 ```python
