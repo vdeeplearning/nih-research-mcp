@@ -24,6 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 PROTOCOL_DIR = DATA_DIR / "protocols"
 
+
 class MissingMCP:
     """Small fallback so data functions remain importable before SDK install."""
 
@@ -224,7 +225,10 @@ def search_protocols(query: str) -> list[dict[str, str]]:
 
 def main() -> None:
     if len(sys.argv) > 1:
-        run_local_demo(" ".join(sys.argv[1:]))
+        args = sys.argv[1:]
+        raw_json = "--json" in args
+        prompt = " ".join(arg for arg in args if arg != "--json")
+        run_local_demo(prompt, raw_json=raw_json)
         return
 
     if sys.stdin.isatty():
@@ -236,6 +240,7 @@ def main() -> None:
             '  python server.py "Find patients over 65 with AAA diameter greater than 3 cm."\n'
             '  python server.py "Compute AAA prevalence in the synthetic cohort."\n'
             '  python server.py "Search the protocols for DICOM de-identification rules."\n\n'
+            "Add --json to any local demo command to print raw tool output.\n\n"
             "When launched by an MCP client, this same file will run as the server."
         )
         return
@@ -245,35 +250,115 @@ def main() -> None:
     mcp.run()
 
 
-def run_local_demo(prompt: str) -> None:
+def run_local_demo(prompt: str, raw_json: bool = False) -> None:
     """Tiny terminal demo router for humans trying the project without an MCP client."""
     normalized = prompt.lower()
 
     if "prevalence" in normalized or "statistics" in normalized:
+        mode = "statistics"
         result = compute_aaa_statistics()
     elif "protocol" in normalized or "de-identification" in normalized or "dicom" in normalized:
+        mode = "protocols"
         result = search_protocols(prompt)
     elif "publication" in normalized or "paper" in normalized or "automated" in normalized:
+        mode = "publications"
         result = search_publications(prompt)
     elif "patient" in normalized or "aaa" in normalized:
+        mode = "patients"
         min_age = None
         age_match = re.search(r"(?:over|older than|age greater than)\s+(\d+)", normalized)
         if age_match:
             min_age = int(age_match.group(1)) + 1
 
         diameter = 3.0
-        diameter_match = re.search(r"(?:greater than|over|at least)\s+(\d+(?:\.\d+)?)\s*cm", normalized)
+        diameter_match = re.search(
+            r"(greater than|over|at least)\s+(\d+(?:\.\d+)?)\s*cm", normalized
+        )
         if diameter_match:
-            diameter = float(diameter_match.group(1))
+            diameter = float(diameter_match.group(2))
+            if diameter_match.group(1) in {"greater than", "over"}:
+                diameter += 0.001
 
         result = find_aaa_patients(min_diameter_cm=diameter, min_age=min_age)
     else:
+        mode = "help"
         result = {
             "message": "Try asking about patients, AAA prevalence, publications, or protocols.",
             "example": "Find patients over 65 with AAA diameter greater than 3 cm.",
         }
 
-    print(json.dumps(result, indent=2))
+    if raw_json:
+        print(json.dumps(result, indent=2))
+        return
+
+    print(format_local_demo_result(mode, result))
+
+
+def format_local_demo_result(mode: str, result: Any) -> str:
+    """Render local demo output as a readable assistant-style response."""
+    if mode == "patients":
+        if not result:
+            return "No matching synthetic patients were found."
+
+        lines = [
+            f"Found {len(result)} matching synthetic patients.",
+            "",
+            "Patient   Age Sex  AAA cm  CT metadata",
+            "--------  --- ---  ------  ------------------------------",
+        ]
+        for patient in result[:10]:
+            lines.append(
+                f"{patient['patient_id']:<8}  {patient['age']:>3} {patient['sex']:<3}"
+                f"  {patient['aaa_diameter_cm']:>6.1f}  "
+                f"{patient['scanner_manufacturer']}, {patient['contrast_status']}"
+            )
+        if len(result) > 10:
+            lines.append(f"...and {len(result) - 10} more. Add --json to view every field.")
+        return "\n".join(lines)
+
+    if mode == "statistics":
+        return "\n".join(
+            [
+                "Synthetic AAA cohort statistics",
+                f"- Cohort size: {result['cohort_size']}",
+                f"- AAA-positive patients: {result['aaa_positive_patients']}",
+                f"- Prevalence: {result['prevalence']:.1%}",
+                f"- Mean AAA diameter: {result['mean_aaa_diameter_cm']} cm",
+                f"- Median AAA diameter: {result['median_aaa_diameter_cm']} cm",
+                "- By sex: "
+                + ", ".join(
+                    f"{sex}: {values['aaa_positive']}/{values['cohort_size']}"
+                    f" positive ({values['prevalence']:.1%})"
+                    for sex, values in result["summary_by_sex"].items()
+                ),
+            ]
+        )
+
+    if mode == "protocols":
+        if not result:
+            return "No matching protocol excerpts were found."
+        lines = [f"Found {len(result)} matching protocol document(s)."]
+        for match in result:
+            lines.extend(["", f"{match['document']}", match["excerpt"]])
+        return "\n".join(lines)
+
+    if mode == "publications":
+        if not result:
+            return "No matching synthetic publications were found."
+        lines = [f"Found {len(result)} matching synthetic publication(s)."]
+        for publication in result:
+            authors = ", ".join(publication["authors"])
+            lines.extend(
+                [
+                    "",
+                    f"{publication['title']} ({publication['year']})",
+                    f"{authors}. {publication['journal']}.",
+                    publication["short_abstract"],
+                ]
+            )
+        return "\n".join(lines)
+
+    return f"{result['message']}\nExample: {result['example']}"
 
 
 if __name__ == "__main__":

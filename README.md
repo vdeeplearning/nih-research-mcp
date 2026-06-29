@@ -61,6 +61,9 @@ python server.py "Compute AAA prevalence in the synthetic cohort."
 python server.py "Find publications about automated AAA detection."
 ```
 
+The local demo prints a concise human-readable summary. Add `--json` to any
+demo command to inspect the raw tool output.
+
 The project uses the official Python MCP SDK package, declared in `pyproject.toml` as `mcp`. The server follows the common `FastMCP` pattern:
 
 ```python
